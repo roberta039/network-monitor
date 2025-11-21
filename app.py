@@ -70,7 +70,14 @@ def main():
         
         # Scanare dispozitive
         with st.spinner("Scanare rețea..."):
-            devices = scanner.scan_network()
+            # Obține rețeaua locală automat
+            network_range = scanner.get_local_network()
+    
+            # Afișează rețeaua care va fi scanată
+            st.info(f"🔍 Scanare rețea: {network_range}")
+    
+            # Execută scanarea
+            devices = scanner.scan_network(network_range)
         
         if devices:
             # Creează DataFrame pentru afișare
