@@ -11,6 +11,7 @@ class NetworkMonitor {
         };
         
         this.discoveredDevices = [];
+        this.currentSort = { field: 'hostname', direction: 'asc' };
         
         this.initializeCharts();
         this.setupEventListeners();
@@ -121,6 +122,17 @@ class NetworkMonitor {
         document.getElementById('refreshDevices').addEventListener('click', () => {
             this.scanNetwork();
         });
+
+        document.getElementById('exportDevices').addEventListener('click', () => {
+            this.exportToCSV();
+        });
+
+        // Table sorting
+        document.querySelectorAll('#devicesTable th[data-sort]').forEach(th => {
+            th.addEventListener('click', () => {
+                this.sortTable(th.dataset.sort);
+            });
+        });
     }
 
     toggleMonitoring() {
@@ -187,43 +199,38 @@ class NetworkMonitor {
             this.log('🔍 Scanning network for devices...');
             
             // Show loading state
-            document.getElementById('devicesList').innerHTML = 
-                '<div class="no-devices">Scanning network... Please wait.</div>';
+            document.getElementById('devicesTableBody').innerHTML = 
+                '<tr><td colspan="9" class="no-devices">Scanning network... Please wait.</td></tr>';
             
-            // Simulate network scan (in real implementation, this would use WebRTC or similar)
             const devices = await this.performNetworkScan();
             this.discoveredDevices = devices;
             
-            this.displayDevices(devices);
+            this.displayDevicesTable(devices);
+            this.updateDeviceCount(devices.length);
             this.log(`✅ Found ${devices.length} devices on the network`);
             
         } catch (error) {
             this.log(`❌ Network scan failed: ${error.message}`);
-            document.getElementById('devicesList').innerHTML = 
-                '<div class="no-devices">Scan failed. Please try again.</div>';
+            document.getElementById('devicesTableBody').innerHTML = 
+                '<tr><td colspan="9" class="no-devices">Scan failed. Please try again.</td></tr>';
         }
     }
 
     async performNetworkScan() {
         return new Promise((resolve) => {
             setTimeout(() => {
-                // Simulated device discovery
-                // In a real implementation, you would use:
-                // - WebRTC for local network discovery
-                // - ARP table reading (server-side)
-                // - Network scanning APIs
-            
                 const deviceTypes = ['computer', 'phone', 'router', 'tablet', 'iot', 'printer'];
                 const manufacturers = ['Apple', 'Samsung', 'Dell', 'HP', 'TP-Link', 'Netgear', 'Cisco', 'Asus'];
-                const osTypes = ['Windows', 'macOS', 'Linux', 'iOS', 'Android', 'RouterOS'];
+                const osTypes = ['Windows 11', 'macOS', 'Linux', 'iOS', 'Android', 'RouterOS'];
                 
                 const devices = [];
-                const deviceCount = Math.floor(Math.random() * 15) + 5; // 5-20 devices
+                const deviceCount = Math.floor(Math.random() * 15) + 8; // 8-23 devices
                 
                 for (let i = 0; i < deviceCount; i++) {
                     const deviceType = deviceTypes[Math.floor(Math.random() * deviceTypes.length)];
                     const manufacturer = manufacturers[Math.floor(Math.random() * manufacturers.length)];
                     const os = osTypes[Math.floor(Math.random() * osTypes.length)];
+                    const isOnline = Math.random() > 0.1; // 90% chance online
                     
                     devices.push({
                         ip: `192.168.1.${Math.floor(Math.random() * 254) + 1}`,
@@ -233,7 +240,8 @@ class NetworkMonitor {
                         type: deviceType,
                         os: os,
                         responseTime: Math.floor(Math.random() * 100) + 1,
-                        lastSeen: new Date()
+                        lastSeen: new Date(),
+                        status: isOnline ? 'online' : 'offline'
                     });
                 }
                 
@@ -246,7 +254,8 @@ class NetworkMonitor {
                     type: 'router',
                     os: 'RouterOS',
                     responseTime: 1,
-                    lastSeen: new Date()
+                    lastSeen: new Date(),
+                    status: 'online'
                 });
                 
                 resolve(devices);
@@ -280,36 +289,115 @@ class NetworkMonitor {
         return `${manufacturer}-${suffix}-${randomNum}`.toLowerCase();
     }
 
-    displayDevices(devices) {
-        const devicesList = document.getElementById('devicesList');
+    displayDevicesTable(devices) {
+        const tbody = document.getElementById('devicesTableBody');
         
         if (devices.length === 0) {
-            devicesList.innerHTML = '<div class="no-devices">No devices found on the network.</div>';
+            tbody.innerHTML = '<tr><td colspan="9" class="no-devices">No devices found on the network.</td></tr>';
             return;
         }
         
-        devicesList.innerHTML = devices.map(device => `
-            <div class="device-card ${device.type}">
-                <div class="device-header">
-                    <div class="device-name">${device.hostname}</div>
-                    <div class="device-ip">${device.ip}</div>
-                </div>
-                <div class="device-info">
-                    <div><strong>Type:</strong> ${this.capitalizeFirstLetter(device.type)}</div>
-                    <div><strong>Manufacturer:</strong> ${device.manufacturer}</div>
-                    <div><strong>OS:</strong> ${device.os}</div>
-                    <div><strong>Response Time:</strong> ${device.responseTime}ms</div>
-                    <div><strong>MAC:</strong> <span class="device-mac">${device.mac}</span></div>
-                    <div><strong>Last Seen:</strong> ${device.lastSeen.toLocaleTimeString()}</div>
-                </div>
-            </div>
+        // Sort devices before displaying
+        const sortedDevices = this.sortDevices(devices, this.currentSort.field, this.currentSort.direction);
+        
+        tbody.innerHTML = sortedDevices.map(device => `
+            <tr class="type-${device.type}">
+                <td><strong>${device.hostname}</strong></td>
+                <td>${device.ip}</td>
+                <td><span class="mac-address">${device.mac}</span></td>
+                <td>${this.capitalizeFirstLetter(device.type)}</td>
+                <td>${device.manufacturer}</td>
+                <td>${device.os}</td>
+                <td>${device.responseTime} ms</td>
+                <td>${device.lastSeen.toLocaleTimeString()}</td>
+                <td><span class="status-${device.status}">${device.status.toUpperCase()}</span></td>
+            </tr>
         `).join('');
     }
 
-    capitalizeFirstLetter(string) {
-        return string.charAt(0).toUpperCase() + string.slice(1);
+    sortTable(field) {
+        // Toggle sort direction if same field
+        if (this.currentSort.field === field) {
+            this.currentSort.direction = this.currentSort.direction === 'asc' ? 'desc' : 'asc';
+        } else {
+            this.currentSort.field = field;
+            this.currentSort.direction = 'asc';
+        }
+        
+        // Update table headers
+        document.querySelectorAll('#devicesTable th').forEach(th => {
+            th.classList.remove('sorted-asc', 'sorted-desc');
+        });
+        
+        const currentTh = document.querySelector(`#devicesTable th[data-sort="${field}"]`);
+        currentTh.classList.add(`sorted-${this.currentSort.direction}`);
+        
+        // Re-display sorted devices
+        this.displayDevicesTable(this.discoveredDevices);
     }
 
+    sortDevices(devices, field, direction) {
+        return [...devices].sort((a, b) => {
+            let aValue = a[field];
+            let bValue = b[field];
+            
+            // Handle special cases
+            if (field === 'responseTime') {
+                aValue = parseInt(aValue);
+                bValue = parseInt(bValue);
+            }
+            
+            if (field === 'lastSeen') {
+                aValue = new Date(aValue);
+                bValue = new Date(bValue);
+            }
+            
+            if (aValue < bValue) return direction === 'asc' ? -1 : 1;
+            if (aValue > bValue) return direction === 'asc' ? 1 : -1;
+            return 0;
+        });
+    }
+
+    updateDeviceCount(count) {
+        document.getElementById('deviceCount').textContent = `${count} device${count !== 1 ? 's' : ''} found`;
+    }
+
+    exportToCSV() {
+        if (this.discoveredDevices.length === 0) {
+            this.log('❌ No devices to export');
+            return;
+        }
+
+        const headers = ['Hostname', 'IP Address', 'MAC Address', 'Device Type', 'Manufacturer', 'OS/System', 'Response Time (ms)', 'Last Seen', 'Status'];
+        const csvData = [
+            headers.join(','),
+            ...this.discoveredDevices.map(device => [
+                device.hostname,
+                device.ip,
+                device.mac,
+                device.type,
+                device.manufacturer,
+                device.os,
+                device.responseTime,
+                device.lastSeen.toLocaleString(),
+                device.status
+            ].join(','))
+        ].join('\n');
+
+        const blob = new Blob([csvData], { type: 'text/csv' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `network-devices-${new Date().toISOString().split('T')[0]}.csv`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
+
+        this.log('📊 Devices exported to CSV file');
+    }
+
+    // ... rest of the methods remain the same (runSpeedTest, detectConnectionType, etc.)
     async runSpeedTest() {
         try {
             this.log('🧪 Running internet speed test...');
@@ -320,12 +408,10 @@ class NetworkMonitor {
             document.getElementById('uploadSpeed').textContent = `${speedTest.upload} Mbps`;
             document.getElementById('pingValue').textContent = `${speedTest.ping} ms`;
             
-            // Update status indicators
             this.updateSpeedStatus('download', speedTest.download);
             this.updateSpeedStatus('upload', speedTest.upload);
             this.updatePingStatus(speedTest.ping);
             
-            // Update chart data
             this.speedData.download.push(speedTest.download);
             this.speedData.upload.push(speedTest.upload);
             this.speedData.ping.push(speedTest.ping);
@@ -338,10 +424,8 @@ class NetworkMonitor {
     }
 
     async performSpeedTest() {
-        // Simplified implementation using XMLHttpRequest or fetch
         return new Promise((resolve) => {
             setTimeout(() => {
-                // Simulated test data (in practice, use a real API)
                 const download = (Math.random() * 100 + 50).toFixed(2);
                 const upload = (Math.random() * 50 + 10).toFixed(2);
                 const ping = (Math.random() * 50 + 10).toFixed(2);
@@ -392,7 +476,7 @@ class NetworkMonitor {
                 status = '✗ Poor';
                 color = '#F44336';
             }
-        } else { // upload
+        } else {
             if (speed > 20) {
                 status = '✓ Excellent';
                 color = '#4CAF50';
@@ -437,7 +521,6 @@ class NetworkMonitor {
     updateCharts() {
         this.speedChart.update();
         
-        // Update comparison chart
         const latestLocal = this.speedData.local[this.speedData.local.length - 1] || 0;
         const latestDownload = this.speedData.download[this.speedData.download.length - 1] || 0;
         const latestUpload = this.speedData.upload[this.speedData.upload.length - 1] || 0;
@@ -455,6 +538,10 @@ class NetworkMonitor {
         
         logElement.appendChild(logEntry);
         logElement.scrollTop = logElement.scrollHeight;
+    }
+
+    capitalizeFirstLetter(string) {
+        return string.charAt(0).toUpperCase() + string.slice(1);
     }
 }
 
