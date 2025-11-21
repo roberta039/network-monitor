@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Monitor Viteză Rețea</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🚀 Monitor Viteză Rețea</h1>
+            <p>Monitorizează viteza în rețeaua locală și internet</p>
+        </header>
+
+        <div class="controls">
+            <button id="startMonitor" class="btn btn-primary">Pornește Monitorizare</button>
+            <button id="speedTest" class="btn btn-secondary">Test Viteză Internet</button>
+            <button id="detectConnection" class="btn btn-info">Detectează Conexiunea</button>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <h3>Viteză Locală</h3>
+                <div id="localSpeed" class="speed-value">0 Mbps</div>
+                <div id="connectionType" class="connection-type">-</div>
+            </div>
+            
+            <div class="stat-card">
+                <h3>Download</h3>
+                <div id="downloadSpeed" class="speed-value">0 Mbps</div>
+                <div class="speed-status" id="downloadStatus">-</div>
+            </div>
+            
+            <div class="stat-card">
+                <h3>Upload</h3>
+                <div id="uploadSpeed" class="speed-value">0 Mbps</div>
+                <div class="speed-status" id="uploadStatus">-</div>
+            </div>
+            
+            <div class="stat-card">
+                <h3>Ping</h3>
+                <div id="pingValue" class="speed-value">0 ms</div>
+                <div class="speed-status" id="pingStatus">-</div>
+            </div>
+        </div>
+
+        <div class="charts">
+            <div class="chart-container">
+                <canvas id="speedChart"></canvas>
+            </div>
+            <div class="chart-container">
+                <canvas id="comparisonChart"></canvas>
+            </div>
+        </div>
+
+        <div class="log-container">
+            <h3>Jurnal Activitate</h3>
+            <div id="log" class="log"></div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
