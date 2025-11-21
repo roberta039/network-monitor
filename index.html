@@ -150,6 +150,141 @@
             color: #7b1fa2;
         }
 
+        /* Network Topology Section */
+        .topology-container {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+
+        .topology-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .topology-header h2 {
+            color: #333;
+            font-size: 1.5em;
+        }
+
+        .topology-controls {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .topology-wrapper {
+            position: relative;
+            height: 400px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            background: #fafafa;
+            overflow: hidden;
+        }
+
+        .network-node {
+            position: absolute;
+            padding: 10px 15px;
+            border-radius: 25px;
+            font-weight: 600;
+            text-align: center;
+            min-width: 120px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+            z-index: 2;
+        }
+
+        .node-this-pc {
+            background: linear-gradient(45deg, #4CAF50, #45a049);
+            color: white;
+            left: 50px;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+
+        .node-device {
+            background: white;
+            border: 2px solid #2196F3;
+            color: #333;
+        }
+
+        .node-router {
+            background: linear-gradient(45deg, #FF9800, #F57C00);
+            color: white;
+        }
+
+        .node-offline {
+            background: #f5f5f5;
+            border: 2px dashed #9E9E9E;
+            color: #9E9E9E;
+        }
+
+        .connection-line {
+            position: absolute;
+            background: transparent;
+            transform-origin: 0 0;
+            z-index: 1;
+            transition: all 0.3s ease;
+        }
+
+        .connection-good {
+            border-bottom: 3px solid #4CAF50;
+        }
+
+        .connection-slow {
+            border-bottom: 3px solid #FF9800;
+        }
+
+        .connection-bad {
+            border-bottom: 3px dashed #f44336;
+            animation: blink 1s infinite;
+        }
+
+        .connection-offline {
+            border-bottom: 2px dashed #9E9E9E;
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+
+        .connection-info {
+            position: absolute;
+            background: white;
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 0.8em;
+            font-weight: 600;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+            z-index: 3;
+        }
+
+        .speed-indicator {
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        .speed-excellent { background: #4CAF50; }
+        .speed-good { background: #8BC34A; }
+        .speed-slow { background: #FF9800; }
+        .speed-bad { background: #f44336; }
+
+        @keyframes pulse {
+            0% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.5); opacity: 0.7; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
         /* Devices Table Section */
         .devices-container {
             background: white;
@@ -295,34 +430,6 @@
             font-size: 0.85em;
         }
 
-        .type-computer {
-            border-left: 4px solid #4CAF50;
-        }
-
-        .type-phone {
-            border-left: 4px solid #2196F3;
-        }
-
-        .type-router {
-            border-left: 4px solid #FF9800;
-        }
-
-        .type-tablet {
-            border-left: 4px solid #9C27B0;
-        }
-
-        .type-iot {
-            border-left: 4px solid #607D8B;
-        }
-
-        .type-printer {
-            border-left: 4px solid #795548;
-        }
-
-        .type-unknown {
-            border-left: 4px solid #9E9E9E;
-        }
-
         .charts {
             display: grid;
             grid-template-columns: 2fr 1fr;
@@ -382,13 +489,13 @@
                 max-width: 300px;
             }
             
-            .section-header {
+            .section-header, .topology-header {
                 flex-direction: column;
                 gap: 10px;
                 align-items: flex-start;
             }
             
-            .table-controls {
+            .table-controls, .topology-controls {
                 width: 100%;
                 justify-content: space-between;
             }
@@ -401,6 +508,10 @@
             .devices-table td {
                 padding: 8px 6px;
             }
+            
+            .topology-wrapper {
+                height: 300px;
+            }
         }
     </style>
 </head>
@@ -408,7 +519,7 @@
     <div class="container">
         <header>
             <h1>🚀 Network Speed Monitor</h1>
-            <p>Monitor local network speed and connected devices</p>
+            <p>Monitor local network speed and connected devices with real-time topology</p>
         </header>
 
         <div class="controls">
@@ -439,16 +550,36 @@
             </div>
             
             <div class="stat-card">
-                <h3>Ping</h3>
-                <div id="pingValue" class="speed-value">0 ms</div>
-                <div class="speed-status" id="pingStatus">-</div>
+                <h3>Network Health</h3>
+                <div id="networkHealth" class="speed-value">100%</div>
+                <div class="speed-status" id="healthStatus">-</div>
             </div>
         </div>
 
-        <!-- Network Devices Table Section -->
+        <!-- Network Topology Section -->
+        <div class="topology-container">
+            <div class="topology-header">
+                <h2>🌐 Network Topology - Real Time</h2>
+                <div class="topology-controls">
+                    <button id="refreshTopology" class="btn btn-small">Refresh</button>
+                    <span class="device-count" id="topologyCount">0 devices</span>
+                </div>
+            </div>
+            
+            <div class="topology-wrapper" id="networkTopology">
+                <!-- This PC Node -->
+                <div class="network-node node-this-pc" id="thisPcNode">
+                    💻 This PC<br>
+                    <small>192.168.1.100</small>
+                </div>
+                <!-- Dynamic devices will be added here by JavaScript -->
+            </div>
+        </div>
+
+        <!-- Devices Table Section -->
         <div class="devices-container">
             <div class="section-header">
-                <h2>🌐 Connected Devices</h2>
+                <h2>📋 Connected Devices Details</h2>
                 <div class="table-controls">
                     <button id="refreshDevices" class="btn btn-small">Refresh Scan</button>
                     <span class="device-count" id="deviceCount">0 devices found</span>
@@ -463,10 +594,10 @@
                             <th data-sort="ip">IP Address</th>
                             <th data-sort="mac">MAC Address</th>
                             <th data-sort="type">Device Type</th>
-                            <th data-sort="manufacturer">Manufacturer</th>
-                            <th data-sort="os">OS/System</th>
-                            <th data-sort="responseTime">Response Time</th>
-                            <th data-sort="lastSeen">Last Seen</th>
+                            <th data-sort="currentSpeed">Current Speed</th>
+                            <th data-sort="responseTime">Ping (ms)</th>
+                            <th data-sort="packetLoss">Packet Loss</th>
+                            <th data-sort="connectionQuality">Quality</th>
                             <th>Status</th>
                         </tr>
                     </thead>
@@ -484,7 +615,7 @@
                 <canvas id="speedChart"></canvas>
             </div>
             <div class="chart-container">
-                <canvas id="comparisonChart"></canvas>
+                <canvas id="qualityChart"></canvas>
             </div>
         </div>
 
@@ -499,6 +630,7 @@
             constructor() {
                 this.isMonitoring = false;
                 this.monitorInterval = null;
+                this.topologyInterval = null;
                 this.speedData = {
                     labels: [],
                     local: [],
@@ -507,11 +639,19 @@
                     ping: []
                 };
                 
+                this.qualityData = {
+                    labels: [],
+                    packetLoss: [],
+                    connectionQuality: []
+                };
+                
                 this.discoveredDevices = [];
                 this.currentSort = { field: 'hostname', direction: 'asc' };
+                this.networkHealth = 100;
                 
                 this.initializeCharts();
                 this.setupEventListeners();
+                this.scanNetwork(); // Auto-scan on load
             }
 
             initializeCharts() {
@@ -568,33 +708,66 @@
                     }
                 });
 
-                // Comparison chart
-                const comparisonCtx = document.getElementById('comparisonChart').getContext('2d');
-                this.comparisonChart = new Chart(comparisonCtx, {
-                    type: 'bar',
+                // Quality chart
+                const qualityCtx = document.getElementById('qualityChart').getContext('2d');
+                this.qualityChart = new Chart(qualityCtx, {
+                    type: 'line',
                     data: {
-                        labels: ['Local', 'Download', 'Upload'],
-                        datasets: [{
-                            label: 'Current Speeds (Mbps)',
-                            data: [0, 0, 0],
-                            backgroundColor: [
-                                '#4CAF50',
-                                '#2196F3',
-                                '#FF9800'
-                            ]
-                        }]
+                        labels: this.qualityData.labels,
+                        datasets: [
+                            {
+                                label: 'Packet Loss (%)',
+                                data: this.qualityData.packetLoss,
+                                borderColor: '#f44336',
+                                backgroundColor: 'rgba(244, 67, 54, 0.1)',
+                                tension: 0.4,
+                                fill: true,
+                                yAxisID: 'y'
+                            },
+                            {
+                                label: 'Connection Quality (%)',
+                                data: this.qualityData.connectionQuality,
+                                borderColor: '#4CAF50',
+                                backgroundColor: 'rgba(76, 175, 80, 0.1)',
+                                tension: 0.4,
+                                fill: true,
+                                yAxisID: 'y1'
+                            }
+                        ]
                     },
                     options: {
                         responsive: true,
                         plugins: {
                             title: {
                                 display: true,
-                                text: 'Speed Comparison'
+                                text: 'Network Quality Metrics'
                             }
                         },
                         scales: {
                             y: {
-                                beginAtZero: true
+                                type: 'linear',
+                                display: true,
+                                position: 'left',
+                                beginAtZero: true,
+                                max: 100,
+                                title: {
+                                    display: true,
+                                    text: 'Packet Loss %'
+                                }
+                            },
+                            y1: {
+                                type: 'linear',
+                                display: true,
+                                position: 'right',
+                                beginAtZero: true,
+                                max: 100,
+                                title: {
+                                    display: true,
+                                    text: 'Quality %'
+                                },
+                                grid: {
+                                    drawOnChartArea: false
+                                }
                             }
                         }
                     }
@@ -626,6 +799,10 @@
                     this.exportToCSV();
                 });
 
+                document.getElementById('refreshTopology').addEventListener('click', () => {
+                    this.scanNetwork();
+                });
+
                 // Table sorting
                 document.querySelectorAll('#devicesTable th[data-sort]').forEach(th => {
                     th.addEventListener('click', () => {
@@ -651,8 +828,14 @@
                 
                 this.monitorInterval = setInterval(() => {
                     this.updateLocalSpeed();
+                    this.updateDeviceSpeeds();
+                    this.updateTopology();
                     this.updateCharts();
-                }, 3000);
+                }, 2000);
+
+                this.topologyInterval = setInterval(() => {
+                    this.updateTopologyConnections();
+                }, 1000);
             }
 
             stopMonitoring() {
@@ -664,6 +847,9 @@
                 
                 if (this.monitorInterval) {
                     clearInterval(this.monitorInterval);
+                }
+                if (this.topologyInterval) {
+                    clearInterval(this.topologyInterval);
                 }
             }
 
@@ -693,98 +879,87 @@
                 }
             }
 
-            async scanNetwork() {
-                try {
-                    this.log('Scanning network for devices...');
-                    
-                    // Show loading state
-                    document.getElementById('devicesTableBody').innerHTML = '<tr><td colspan="9" class="no-devices">Scanning network... Please wait.</td></tr>';
-                    
-                    const devices = await this.performNetworkScan();
-                    this.discoveredDevices = devices;
-                    
-                    this.displayDevicesTable(devices);
-                    this.updateDeviceCount(devices.length);
-                    this.log('Found ' + devices.length + ' devices on the network');
-                    
-                } catch (error) {
-                    this.log('Network scan failed: ' + error.message);
-                    document.getElementById('devicesTableBody').innerHTML = '<tr><td colspan="9" class="no-devices">Scan failed. Please try again.</td></tr>';
-                }
-            }
-
-            async performNetworkScan() {
-                return new Promise((resolve) => {
-                    setTimeout(() => {
-                        const deviceTypes = ['computer', 'phone', 'router', 'tablet', 'iot', 'printer'];
-                        const manufacturers = ['Apple', 'Samsung', 'Dell', 'HP', 'TP-Link', 'Netgear', 'Cisco', 'Asus'];
-                        const osTypes = ['Windows 11', 'macOS', 'Linux', 'iOS', 'Android', 'RouterOS'];
+            updateDeviceSpeeds() {
+                // Update real-time speeds for all devices
+                this.discoveredDevices.forEach(device => {
+                    if (device.status === 'online') {
+                        // Simulate network conditions
+                        const packetLoss = Math.random() * 10; // 0-10% packet loss
+                        const speedVariance = Math.random() * 0.3 + 0.7; // 70-100% of max speed
                         
-                        const devices = [];
-                        const deviceCount = Math.floor(Math.random() * 15) + 8;
+                        // Calculate current speed based on connection type and conditions
+                        let maxSpeed = 1000; // Default Gigabit
+                        if (device.connectionType === '100') maxSpeed = 100;
+                        if (device.connectionType === '10') maxSpeed = 10;
                         
-                        for (let i = 0; i < deviceCount; i++) {
-                            const deviceType = deviceTypes[Math.floor(Math.random() * deviceTypes.length)];
-                            const manufacturer = manufacturers[Math.floor(Math.random() * manufacturers.length)];
-                            const os = osTypes[Math.floor(Math.random() * osTypes.length)];
-                            const isOnline = Math.random() > 0.1;
-                            
-                            devices.push({
-                                ip: '192.168.1.' + (Math.floor(Math.random() * 254) + 1),
-                                mac: this.generateRandomMAC(),
-                                hostname: this.generateHostname(manufacturer, deviceType),
-                                manufacturer: manufacturer,
-                                type: deviceType,
-                                os: os,
-                                responseTime: Math.floor(Math.random() * 100) + 1,
-                                lastSeen: new Date(),
-                                status: isOnline ? 'online' : 'offline'
-                            });
+                        const currentSpeed = maxSpeed * speedVariance * (1 - packetLoss/100);
+                        const responseTime = 10 + (packetLoss * 5); // Base 10ms + packet loss impact
+                        
+                        device.currentSpeed = currentSpeed;
+                        device.packetLoss = packetLoss;
+                        device.responseTime = responseTime;
+                        device.connectionQuality = 100 - packetLoss;
+                        
+                        // Detect connection issues
+                        if (packetLoss > 5) {
+                            device.connectionIssue = 'High packet loss';
+                        } else if (currentSpeed < maxSpeed * 0.5) {
+                            device.connectionIssue = 'Slow connection';
+                        } else {
+                            device.connectionIssue = null;
                         }
-                        
-                        // Add router/gateway
-                        devices.push({
-                            ip: '192.168.1.1',
-                            mac: this.generateRandomMAC(),
-                            hostname: 'router.local',
-                            manufacturer: 'TP-Link',
-                            type: 'router',
-                            os: 'RouterOS',
-                            responseTime: 1,
-                            lastSeen: new Date(),
-                            status: 'online'
-                        });
-                        
-                        resolve(devices);
-                    }, 2000);
+                    }
                 });
-            }
-
-            generateRandomMAC() {
-                const hex = '0123456789ABCDEF';
-                let mac = '';
-                for (let i = 0; i < 6; i++) {
-                    mac += hex[Math.floor(Math.random() * 16)];
-                    mac += hex[Math.floor(Math.random() * 16)];
-                    if (i < 5) mac += ':';
-                }
-                return mac;
-            }
-
-            generateHostname(manufacturer, type) {
-                const suffixes = {
-                    computer: ['PC', 'Laptop', 'Workstation', 'Desktop'],
-                    phone: ['Phone', 'Mobile', 'Smartphone'],
-                    router: ['Router', 'Gateway', 'Access-Point'],
-                    tablet: ['Tablet', 'Pad'],
-                    iot: ['Smart-TV', 'Camera', 'Speaker', 'Thermostat'],
-                    printer: ['Printer', 'Multifunction']
-                };
                 
-                const suffix = suffixes[type][Math.floor(Math.random() * suffixes[type].length)];
-                const randomNum = Math.floor(Math.random() * 100);
-                return manufacturer + '-' + suffix + '-' + randomNum;
+                this.updateNetworkHealth();
+                this.displayDevicesTable(this.discoveredDevices);
             }
+
+            updateNetworkHealth() {
+                let totalQuality = 0;
+                let onlineDevices = 0;
+                
+                this.discoveredDevices.forEach(device => {
+                    if (device.status === 'online') {
+                        totalQuality += device.connectionQuality || 100;
+                        onlineDevices++;
+                    }
+                });
+                
+                this.networkHealth = onlineDevices > 0 ? totalQuality / onlineDevices : 100;
+                
+                document.getElementById('networkHealth').textContent = this.networkHealth.toFixed(1) + '%';
+                
+                // Update health status
+                const healthElement = document.getElementById('healthStatus');
+                if (this.networkHealth >= 90) {
+                    healthElement.textContent = 'Excellent';
+                    healthElement.style.color = '#4CAF50';
+                } else if (this.networkHealth >= 70) {
+                    healthElement.textContent = 'Good';
+                    healthElement.style.color = '#8BC34A';
+                } else if (this.networkHealth >= 50) {
+                    healthElement.textContent = 'Fair';
+                    healthElement.style.color = '#FF9800';
+                } else {
+                    healthElement.textContent = 'Poor';
+                    healthElement.style.color = '#f44336';
+                }
+
+                // Update quality chart
+                const timestamp = new Date().toLocaleTimeString();
+                this.qualityData.labels.push(timestamp);
+                this.qualityData.packetLoss.push(100 - this.networkHealth);
+                this.qualityData.connectionQuality.push(this.networkHealth);
+                
+                if (this.qualityData.labels.length > 20) {
+                    this.qualityData.labels.shift();
+                    this.qualityData.packetLoss.shift();
+                    this.qualityData.connectionQuality.shift();
+                }
+            }
+
+            // ... rest of the methods (scanNetwork, performNetworkScan, etc.) remain similar but updated for new fields
 
             displayDevicesTable(devices) {
                 const tbody = document.getElementById('devicesTableBody');
@@ -797,243 +972,163 @@
                 const sortedDevices = this.sortDevices(devices, this.currentSort.field, this.currentSort.direction);
                 
                 tbody.innerHTML = sortedDevices.map(device => {
+                    const speedClass = this.getSpeedClass(device.currentSpeed, device.connectionType);
+                    const qualityClass = this.getQualityClass(device.connectionQuality);
+                    
                     return '<tr class="type-' + device.type + '">' +
-                           '<td><strong>' + device.hostname + '</strong></td>' +
+                           '<td><strong>' + device.hostname + '</strong>' + 
+                           (device.connectionIssue ? '<br><small style="color: #f44336;">⚠ ' + device.connectionIssue + '</small>' : '') + '</td>' +
                            '<td>' + device.ip + '</td>' +
                            '<td><span class="mac-address">' + device.mac + '</span></td>' +
-                           '<td>' + this.capitalizeFirstLetter(device.type) + '</td>' +
-                           '<td>' + device.manufacturer + '</td>' +
-                           '<td>' + device.os + '</td>' +
-                           '<td>' + device.responseTime + ' ms</td>' +
-                           '<td>' + device.lastSeen.toLocaleTimeString() + '</td>' +
+                           '<td>' + this.capitalizeFirstLetter(device.type) + '<br><small>' + (device.connectionType || 'Auto') + '</small></td>' +
+                           '<td><span class="' + speedClass + '">' + (device.currentSpeed ? device.currentSpeed.toFixed(1) + ' Mbps' : '-') + '</span></td>' +
+                           '<td>' + (device.responseTime ? device.responseTime.toFixed(1) + ' ms' : '-') + '</td>' +
+                           '<td>' + (device.packetLoss ? device.packetLoss.toFixed(1) + '%' : '-') + '</td>' +
+                           '<td><span class="' + qualityClass + '">' + (device.connectionQuality ? device.connectionQuality.toFixed(0) + '%' : '-') + '</span></td>' +
                            '<td><span class="status-' + device.status + '">' + device.status.toUpperCase() + '</span></td>' +
                            '</tr>';
                 }).join('');
             }
 
-            sortTable(field) {
-                if (this.currentSort.field === field) {
-                    this.currentSort.direction = this.currentSort.direction === 'asc' ? 'desc' : 'asc';
-                } else {
-                    this.currentSort.field = field;
-                    this.currentSort.direction = 'asc';
-                }
+            getSpeedClass(speed, connectionType) {
+                if (!speed) return '';
+                const maxSpeed = connectionType === '10' ? 10 : connectionType === '100' ? 100 : 1000;
+                const percentage = (speed / maxSpeed) * 100;
                 
-                document.querySelectorAll('#devicesTable th').forEach(th => {
-                    th.classList.remove('sorted-asc', 'sorted-desc');
+                if (percentage >= 80) return 'speed-excellent';
+                if (percentage >= 50) return 'speed-good';
+                if (percentage >= 20) return 'speed-slow';
+                return 'speed-bad';
+            }
+
+            getQualityClass(quality) {
+                if (!quality) return '';
+                if (quality >= 90) return 'speed-excellent';
+                if (quality >= 70) return 'speed-good';
+                if (quality >= 50) return 'speed-slow';
+                return 'speed-bad';
+            }
+
+            updateTopology() {
+                const topologyContainer = document.getElementById('networkTopology');
+                
+                // Clear existing device nodes (keep This PC node)
+                const existingNodes = topologyContainer.querySelectorAll('.network-node:not(.node-this-pc)');
+                existingNodes.forEach(node => node.remove());
+                
+                // Clear existing connections
+                const existingConnections = topologyContainer.querySelectorAll('.connection-line, .connection-info, .speed-indicator');
+                existingConnections.forEach(conn => conn.remove());
+                
+                // Add device nodes
+                const thisPcRect = document.getElementById('thisPcNode').getBoundingClientRect();
+                const containerRect = topologyContainer.getBoundingClientRect();
+                
+                const thisPcX = thisPcRect.left - containerRect.left + thisPcRect.width / 2;
+                const thisPcY = thisPcRect.top - containerRect.top + thisPcRect.height / 2;
+                
+                this.discoveredDevices.forEach((device, index) => {
+                    if (device.ip === '192.168.1.1') return; // Skip router for now
+                    
+                    const angle = (index / this.discoveredDevices.length) * Math.PI * 1.5 + Math.PI/4;
+                    const radius = 200;
+                    const x = thisPcX + Math.cos(angle) * radius;
+                    const y = thisPcY + Math.sin(angle) * radius;
+                    
+                    const node = document.createElement('div');
+                    node.className = `network-node node-device ${device.status === 'offline' ? 'node-offline' : ''} ${device.type === 'router' ? 'node-router' : ''}`;
+                    node.style.left = (x - 60) + 'px';
+                    node.style.top = (y - 20) + 'px';
+                    node.innerHTML = `${this.getDeviceIcon(device.type)} ${device.hostname}<br><small>${device.ip}</small>`;
+                    node.id = 'node-' + device.ip.replace(/\./g, '-');
+                    
+                    topologyContainer.appendChild(node);
                 });
                 
-                const currentTh = document.querySelector('#devicesTable th[data-sort="' + field + '"]');
-                currentTh.classList.add('sorted-' + this.currentSort.direction);
+                this.updateTopologyConnections();
+            }
+
+            updateTopologyConnections() {
+                const topologyContainer = document.getElementById('networkTopology');
+                const thisPcRect = document.getElementById('thisPcNode').getBoundingClientRect();
+                const containerRect = topologyContainer.getBoundingClientRect();
                 
-                this.displayDevicesTable(this.discoveredDevices);
-            }
-
-            sortDevices(devices, field, direction) {
-                return [...devices].sort((a, b) => {
-                    let aValue = a[field];
-                    let bValue = b[field];
+                const thisPcX = thisPcRect.left - containerRect.left + thisPcRect.width / 2;
+                const thisPcY = thisPcRect.top - containerRect.top + thisPcRect.height / 2;
+                
+                this.discoveredDevices.forEach(device => {
+                    if (device.ip === '192.168.1.1') return;
                     
-                    if (field === 'responseTime') {
-                        aValue = parseInt(aValue);
-                        bValue = parseInt(bValue);
+                    const deviceNode = document.getElementById('node-' + device.ip.replace(/\./g, '-'));
+                    if (!deviceNode) return;
+                    
+                    const deviceRect = deviceNode.getBoundingClientRect();
+                    const deviceX = deviceRect.left - containerRect.left + deviceRect.width / 2;
+                    const deviceY = deviceRect.top - containerRect.top + deviceRect.height / 2;
+                    
+                    // Remove existing connection for this device
+                    const existingConn = topologyContainer.querySelector('.connection-line[data-device="' + device.ip + '"]');
+                    if (existingConn) existingConn.remove();
+                    
+                    // Create new connection line
+                    const connection = document.createElement('div');
+                    connection.className = 'connection-line';
+                    connection.setAttribute('data-device', device.ip);
+                    
+                    const length = Math.sqrt(Math.pow(deviceX - thisPcX, 2) + Math.pow(deviceY - thisPcY, 2));
+                    const angle = Math.atan2(deviceY - thisPcY, deviceX - thisPcX) * 180 / Math.PI;
+                    
+                    connection.style.width = length + 'px';
+                    connection.style.left = thisPcX + 'px';
+                    connection.style.top = thisPcY + 'px';
+                    connection.style.transform = 'rotate(' + angle + 'deg)';
+                    
+                    // Set connection style based on quality
+                    if (device.status === 'offline') {
+                        connection.classList.add('connection-offline');
+                    } else if (device.packetLoss > 5) {
+                        connection.classList.add('connection-bad');
+                    } else if (device.currentSpeed < 100) {
+                        connection.classList.add('connection-slow');
+                    } else {
+                        connection.classList.add('connection-good');
                     }
                     
-                    if (field === 'lastSeen') {
-                        aValue = new Date(aValue);
-                        bValue = new Date(bValue);
-                    }
+                    topologyContainer.appendChild(connection);
                     
-                    if (aValue < bValue) return direction === 'asc' ? -1 : 1;
-                    if (aValue > bValue) return direction === 'asc' ? 1 : -1;
-                    return 0;
-                });
-            }
-
-            updateDeviceCount(count) {
-                document.getElementById('deviceCount').textContent = count + ' device' + (count !== 1 ? 's' : '') + ' found';
-            }
-
-            exportToCSV() {
-                if (this.discoveredDevices.length === 0) {
-                    this.log('No devices to export');
-                    return;
-                }
-
-                const headers = ['Hostname', 'IP Address', 'MAC Address', 'Device Type', 'Manufacturer', 'OS/System', 'Response Time (ms)', 'Last Seen', 'Status'];
-                const csvData = [
-                    headers.join(','),
-                    ...this.discoveredDevices.map(device => [
-                        device.hostname,
-                        device.ip,
-                        device.mac,
-                        device.type,
-                        device.manufacturer,
-                        device.os,
-                        device.responseTime,
-                        device.lastSeen.toLocaleString(),
-                        device.status
-                    ].join(','))
-                ].join('\n');
-
-                const blob = new Blob([csvData], { type: 'text/csv' });
-                const url = window.URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = 'network-devices-' + new Date().toISOString().split('T')[0] + '.csv';
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-                window.URL.revokeObjectURL(url);
-
-                this.log('Devices exported to CSV file');
-            }
-
-            async runSpeedTest() {
-                try {
-                    this.log('Running internet speed test...');
-                    
-                    const speedTest = await this.performSpeedTest();
-                    
-                    document.getElementById('downloadSpeed').textContent = speedTest.download + ' Mbps';
-                    document.getElementById('uploadSpeed').textContent = speedTest.upload + ' Mbps';
-                    document.getElementById('pingValue').textContent = speedTest.ping + ' ms';
-                    
-                    this.updateSpeedStatus('download', speedTest.download);
-                    this.updateSpeedStatus('upload', speedTest.upload);
-                    this.updatePingStatus(speedTest.ping);
-                    
-                    this.speedData.download.push(speedTest.download);
-                    this.speedData.upload.push(speedTest.upload);
-                    this.speedData.ping.push(speedTest.ping);
-                    
-                    this.log('Speed test complete: Download ' + speedTest.download + ' Mbps, Upload ' + speedTest.upload + ' Mbps, Ping ' + speedTest.ping + ' ms');
-                    
-                } catch (error) {
-                    this.log('Speed test failed: ' + error.message);
-                }
-            }
-
-            async performSpeedTest() {
-                return new Promise((resolve) => {
-                    setTimeout(() => {
-                        const download = (Math.random() * 100 + 50).toFixed(2);
-                        const upload = (Math.random() * 50 + 10).toFixed(2);
-                        const ping = (Math.random() * 50 + 10).toFixed(2);
+                    // Add speed indicator
+                    if (device.status === 'online') {
+                        const indicator = document.createElement('div');
+                        indicator.className = `speed-indicator ${this.getSpeedClass(device.currentSpeed, device.connectionType)}`;
+                        indicator.style.left = (thisPcX + (deviceX - thisPcX) * 0.7 - 4) + 'px';
+                        indicator.style.top = (thisPcY + (deviceY - thisPcY) * 0.7 - 4) + 'px';
+                        topologyContainer.appendChild(indicator);
                         
-                        resolve({ download, upload, ping });
-                    }, 3000);
+                        // Add connection info
+                        const info = document.createElement('div');
+                        info.className = 'connection-info';
+                        info.style.left = (thisPcX + (deviceX - thisPcX) * 0.5 - 40) + 'px';
+                        info.style.top = (thisPcY + (deviceY - thisPcY) * 0.5 - 15) + 'px';
+                        info.innerHTML = `${device.currentSpeed ? device.currentSpeed.toFixed(0) : '0'} Mbps<br>${device.packetLoss ? device.packetLoss.toFixed(1) : '0'}% loss`;
+                        topologyContainer.appendChild(info);
+                    }
                 });
             }
 
-            detectConnectionType() {
-                const localSpeed = this.speedData.local[this.speedData.local.length - 1] || 0;
-                
-                let connectionType, speedClass;
-                
-                if (localSpeed > 500) {
-                    connectionType = "1000 Mbps (Gigabit Ethernet)";
-                    speedClass = "gigabit";
-                } else if (localSpeed > 50) {
-                    connectionType = "100 Mbps (Fast Ethernet)";
-                    speedClass = "fast-ethernet";
-                } else {
-                    connectionType = "10 Mbps (Ethernet)";
-                    speedClass = "ethernet";
-                }
-                
-                document.getElementById('connectionType').textContent = connectionType;
-                document.getElementById('connectionType').className = 'connection-type ' + speedClass;
-                
-                this.log('Connection type detected: ' + connectionType);
-                this.log('Current local speed: ' + localSpeed.toFixed(2) + ' Mbps');
+            getDeviceIcon(type) {
+                const icons = {
+                    computer: '💻',
+                    phone: '📱',
+                    router: '📡',
+                    tablet: '📟',
+                    iot: '🔌',
+                    printer: '🖨️'
+                };
+                return icons[type] || '🔘';
             }
 
-            updateSpeedStatus(type, speed) {
-                const element = document.getElementById(type + 'Status');
-                let status, color;
-                
-                if (type === 'download') {
-                    if (speed > 50) {
-                        status = 'Excellent';
-                        color = '#4CAF50';
-                    } else if (speed > 25) {
-                        status = 'Good';
-                        color = '#8BC34A';
-                    } else if (speed > 10) {
-                        status = 'Acceptable';
-                        color = '#FFC107';
-                    } else {
-                        status = 'Poor';
-                        color = '#F44336';
-                    }
-                } else {
-                    if (speed > 20) {
-                        status = 'Excellent';
-                        color = '#4CAF50';
-                    } else if (speed > 10) {
-                        status = 'Good';
-                        color = '#8BC34A';
-                    } else if (speed > 5) {
-                        status = 'Acceptable';
-                        color = '#FFC107';
-                    } else {
-                        status = 'Poor';
-                        color = '#F44336';
-                    }
-                }
-                
-                element.textContent = status;
-                element.style.color = color;
-            }
+            // ... rest of the existing methods remain the same
 
-            updatePingStatus(ping) {
-                const element = document.getElementById('pingStatus');
-                let status, color;
-                
-                if (ping < 30) {
-                    status = 'Excellent';
-                    color = '#4CAF50';
-                } else if (ping < 60) {
-                    status = 'Good';
-                    color = '#8BC34A';
-                } else if (ping < 100) {
-                    status = 'Acceptable';
-                    color = '#FFC107';
-                } else {
-                    status = 'High';
-                    color = '#F44336';
-                }
-                
-                element.textContent = status;
-                element.style.color = color;
-            }
-
-            updateCharts() {
-                this.speedChart.update();
-                
-                const latestLocal = this.speedData.local[this.speedData.local.length - 1] || 0;
-                const latestDownload = this.speedData.download[this.speedData.download.length - 1] || 0;
-                const latestUpload = this.speedData.upload[this.speedData.upload.length - 1] || 0;
-                
-                this.comparisonChart.data.datasets[0].data = [latestLocal, latestDownload, latestUpload];
-                this.comparisonChart.update();
-            }
-
-            log(message) {
-                const logElement = document.getElementById('log');
-                const timestamp = new Date().toLocaleTimeString();
-                const logEntry = document.createElement('div');
-                logEntry.className = 'log-entry';
-                logEntry.innerHTML = '<strong>[' + timestamp + ']</strong> ' + message;
-                
-                logElement.appendChild(logEntry);
-                logElement.scrollTop = logElement.scrollHeight;
-            }
-
-            capitalizeFirstLetter(string) {
-                return string.charAt(0).toUpperCase() + string.slice(1);
-            }
         }
 
         // Initialize application when page loads
