@@ -397,7 +397,6 @@ class NetworkMonitor {
         this.log('📊 Devices exported to CSV file');
     }
 
-    // ... rest of the methods remain the same (runSpeedTest, detectConnectionType, etc.)
     async runSpeedTest() {
         try {
             this.log('🧪 Running internet speed test...');
