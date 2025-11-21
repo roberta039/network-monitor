@@ -12,7 +12,7 @@ body {
 }
 
 .container {
-    max-width: 1200px;
+    max-width: 1400px;
     margin: 0 auto;
     padding: 20px;
 }
@@ -83,6 +83,11 @@ header p {
     color: white;
 }
 
+.btn-success {
+    background: linear-gradient(45deg, #673AB7, #5E35B1);
+    color: white;
+}
+
 .btn-danger {
     background: linear-gradient(45deg, #f44336, #d32f2f);
     color: white;
@@ -137,7 +142,7 @@ header p {
     color: #7b1fa2;
 }
 
-/* Devices Section */
+/* Devices Table Section */
 .devices-container {
     background: white;
     padding: 25px;
@@ -151,6 +156,8 @@ header p {
     justify-content: space-between;
     align-items: center;
     margin-bottom: 20px;
+    flex-wrap: wrap;
+    gap: 15px;
 }
 
 .section-header h2 {
@@ -158,73 +165,82 @@ header p {
     font-size: 1.5em;
 }
 
-.devices-list {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+.table-controls {
+    display: flex;
+    align-items: center;
     gap: 15px;
 }
 
-.device-card {
-    background: #f8f9fa;
-    padding: 15px;
+.device-count {
+    background: #e3f2fd;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-weight: 600;
+    color: #1976D2;
+}
+
+.table-wrapper {
+    overflow-x: auto;
     border-radius: 10px;
-    border-left: 4px solid #4CAF50;
-    transition: all 0.3s ease;
+    border: 1px solid #e0e0e0;
 }
 
-.device-card:hover {
-    transform: translateX(5px);
-    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+.devices-table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 1000px;
 }
 
-.device-card.unknown {
-    border-left-color: #FF9800;
-}
-
-.device-card.router {
-    border-left-color: #2196F3;
-}
-
-.device-card.phone {
-    border-left-color: #9C27B0;
-}
-
-.device-card.computer {
-    border-left-color: #4CAF50;
-}
-
-.device-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 10px;
-}
-
-.device-name {
-    font-weight: bold;
-    font-size: 1.1em;
-    color: #333;
-}
-
-.device-ip {
-    background: #e9ecef;
-    padding: 2px 8px;
-    border-radius: 12px;
-    font-size: 0.8em;
-    color: #666;
-}
-
-.device-info {
+.devices-table th {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white;
+    padding: 15px 12px;
+    text-align: left;
+    font-weight: 600;
     font-size: 0.9em;
-    color: #666;
+    cursor: pointer;
+    user-select: none;
+    position: relative;
 }
 
-.device-mac {
-    font-family: 'Courier New', monospace;
-    background: #f1f3f4;
-    padding: 2px 6px;
-    border-radius: 4px;
-    font-size: 0.85em;
+.devices-table th:hover {
+    background: linear-gradient(135deg, #5a6fd8, #6a4190);
+}
+
+.devices-table th::after {
+    content: '↕';
+    margin-left: 5px;
+    opacity: 0.7;
+}
+
+.devices-table th.sorted-asc::after {
+    content: '↑';
+}
+
+.devices-table th.sorted-desc::after {
+    content: '↓';
+}
+
+.devices-table td {
+    padding: 12px;
+    border-bottom: 1px solid #f0f0f0;
+    font-size: 0.9em;
+}
+
+.devices-table tbody tr {
+    transition: background-color 0.2s ease;
+}
+
+.devices-table tbody tr:hover {
+    background-color: #f8f9fa;
+}
+
+.devices-table tbody tr:nth-child(even) {
+    background-color: #fafafa;
+}
+
+.devices-table tbody tr:nth-child(even):hover {
+    background-color: #f1f3f4;
 }
 
 .no-devices {
@@ -232,7 +248,71 @@ header p {
     color: #666;
     font-style: italic;
     padding: 40px;
-    grid-column: 1 / -1;
+}
+
+/* Status badges */
+.status-online {
+    background: #4CAF50;
+    color: white;
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 0.8em;
+    font-weight: 600;
+}
+
+.status-offline {
+    background: #f44336;
+    color: white;
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 0.8em;
+    font-weight: 600;
+}
+
+.status-unknown {
+    background: #FF9800;
+    color: white;
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 0.8em;
+    font-weight: 600;
+}
+
+/* Device type colors */
+.mac-address {
+    font-family: 'Courier New', monospace;
+    background: #f1f3f4;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 0.85em;
+}
+
+.type-computer {
+    border-left: 4px solid #4CAF50;
+}
+
+.type-phone {
+    border-left: 4px solid #2196F3;
+}
+
+.type-router {
+    border-left: 4px solid #FF9800;
+}
+
+.type-tablet {
+    border-left: 4px solid #9C27B0;
+}
+
+.type-iot {
+    border-left: 4px solid #607D8B;
+}
+
+.type-printer {
+    border-left: 4px solid #795548;
+}
+
+.type-unknown {
+    border-left: 4px solid #9E9E9E;
 }
 
 .charts {
@@ -274,7 +354,12 @@ header p {
     background: white;
 }
 
+/* Responsive design */
 @media (max-width: 768px) {
+    .container {
+        padding: 10px;
+    }
+    
     .charts {
         grid-template-columns: 1fr;
     }
@@ -295,7 +380,17 @@ header p {
         align-items: flex-start;
     }
     
-    .devices-list {
-        grid-template-columns: 1fr;
+    .table-controls {
+        width: 100%;
+        justify-content: space-between;
+    }
+    
+    .devices-table {
+        font-size: 0.8em;
+    }
+    
+    .devices-table th,
+    .devices-table td {
+        padding: 8px 6px;
     }
 }
